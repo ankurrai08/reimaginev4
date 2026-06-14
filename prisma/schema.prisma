@@ -1,0 +1,116 @@
+// ReimaginAI — data model
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Discipline {
+  PRODUCT
+  STRATEGY
+  ANALYTICS
+}
+
+enum Difficulty {
+  NORMAL
+  BOSS
+}
+
+enum RoundStatus {
+  DEALT
+  SUBMITTED
+  SCORED
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  players Player[]
+  rounds  Round[]
+}
+
+model Player {
+  id           String     @id @default(cuid())
+  roomId       String
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name         String
+  discipline   Discipline
+  totalScore   Int        @default(0)
+  streak       Int        @default(0)
+  roundsPlayed Int        @default(0)
+  token        String     @unique
+  createdAt    DateTime   @default(now())
+
+  rounds Round[]
+  badges Badge[]
+
+  @@unique([roomId, name])
+  @@index([roomId])
+}
+
+model Round {
+  id         String      @id @default(cuid())
+  roomId     String
+  room       Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  playerId   String
+  player     Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  objectCard String
+  lensCard   String
+  difficulty Difficulty  @default(NORMAL)
+  status     RoundStatus @default(DEALT)
+  dealtAt    DateTime    @default(now())
+
+  submission Submission?
+
+  @@index([playerId])
+  @@index([roomId])
+}
+
+model Submission {
+  id              String   @id @default(cuid())
+  roundId         String   @unique
+  round           Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  whatItIs        String
+  aiCentral       String
+  customerService String
+  dataLoop        String
+  submittedAt     DateTime @default(now())
+
+  score Score?
+}
+
+model Score {
+  id                String     @id @default(cuid())
+  submissionId      String     @unique
+  submission        Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  csImpact          Int
+  aiNative          Int
+  desirability      Int
+  strategicEdge     Int
+  dataMeasurability Int
+  creativity        Int
+  rawTotal          Int
+  weightedTotal     Int
+  pointsAwarded     Int
+  verdict           String
+  feedback          String
+  createdAt         DateTime   @default(now())
+}
+
+model Badge {
+  id       String   @id @default(cuid())
+  playerId String
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  type     String
+  earnedAt DateTime @default(now())
+
+  @@unique([playerId, type])
+  @@index([playerId])
+}

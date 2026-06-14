@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0b14;
+  --foreground: #f4f4fb;
+  --card: #15152340;
+  --border: #2a2a42;
+  --indigo: #6366f1;
+  --pink: #ec4899;
+  --teal: #14b8a6;
+  --amber: #f59e0b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  min-height: 100%;
+  background-image:
+    radial-gradient(900px 600px at 12% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, rgba(236, 72, 153, 0.14), transparent 55%),
+    radial-gradient(700px 500px at 50% 120%, rgba(20, 184, 166, 0.12), transparent 60%);
+  background-attachment: fixed;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Score reveal / celebration animations */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-pop {
+  animation: pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes grow-bar {
+  from {
+    width: 0;
+  }
+}
+.animate-bar {
+  animation: grow-bar 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes float-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-float {
+  animation: float-up 0.4s ease-out both;
+}
