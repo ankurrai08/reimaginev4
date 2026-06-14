@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPlayerByToken } from "@/lib/auth";
 import { dealCard } from "@/lib/deck";
+import { dbErrorResponse } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -15,31 +16,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const player = await getPlayerByToken(body.token);
-  if (!player) {
-    return NextResponse.json({ error: "Unknown token." }, { status: 404 });
+  try {
+    const player = await getPlayerByToken(body.token);
+    if (!player) {
+      return NextResponse.json({ error: "Unknown token." }, { status: 404 });
+    }
+
+    const open = await prisma.round.findFirst({
+      where: { playerId: player.id, status: "DEALT" },
+      orderBy: { dealtAt: "desc" },
+    });
+    if (open) {
+      return NextResponse.json({ round: roundPayload(open) });
+    }
+
+    const card = dealCard();
+    const round = await prisma.round.create({
+      data: {
+        roomId: player.roomId,
+        playerId: player.id,
+        objectCard: card.objectCard,
+        lensCard: card.lensCard,
+        difficulty: card.difficulty,
+      },
+    });
+
+    return NextResponse.json({ round: roundPayload(round) });
+  } catch (err) {
+    return dbErrorResponse(err);
   }
-
-  const open = await prisma.round.findFirst({
-    where: { playerId: player.id, status: "DEALT" },
-    orderBy: { dealtAt: "desc" },
-  });
-  if (open) {
-    return NextResponse.json({ round: roundPayload(open) });
-  }
-
-  const card = dealCard();
-  const round = await prisma.round.create({
-    data: {
-      roomId: player.roomId,
-      playerId: player.id,
-      objectCard: card.objectCard,
-      lensCard: card.lensCard,
-      difficulty: card.difficulty,
-    },
-  });
-
-  return NextResponse.json({ round: roundPayload(round) });
 }
 
 function roundPayload(r: {
